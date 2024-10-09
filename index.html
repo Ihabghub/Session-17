@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hangman</title>
+    <style>
+        /* Add your custom styles here */
+        #hangman-container {
+            text-align: center;
+            margin: auto;
+        }
+
+        #word-display {
+            font-size: 24px;
+            margin: auto;
+        }
+
+        #guess-input {
+            width: 200px;
+            padding: 10px;
+            margin: auto;
+        }
+
+        #message {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="hangman-container">
+        <canvas id="hangman-canvas" width="300" height="300"></canvas>
+        <div id="word-display"></div>
+        <input type="text" id="guess-input" placeholder="Guess a letter">
+        <button onclick="guessLetter()">Guess</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('hangman-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const wordDisplay = document.getElementById('word-display');
+        const guessInput = document.getElementById('guess-input');
+        const message = document.getElementById('message');
+
+        let wordToGuess = '';
+        let guessedLetters = [];
+        let incorrectGuesses = 0;
+        let gameIsOver = false;
+
+        const hangmanParts = [
+            // Head
+            { x: 150, y: 50, radius: 20 },
+            // Body
+            { x: 150, y: 90, width: 20, height: 80 },
+            // Left arm
+            { x: 130, y: 110, width: 20, height: 40, angle: -45 },
+            // Right arm
+            { x: 170, y: 110, width: 20, height: 40, angle: 45 },
+            // Left leg
+            { x: 130, y: 190, width: 20, height: 40, angle: -45 },
+            // Right leg
+            { x: 170, y: 190, width: 20, height: 40, angle: 45 }
+        ];
+
+        function drawHangman() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw gallows
+            ctx.beginPath();
+            ctx.moveTo(50, 280);
+            ctx.lineTo(50, 50);
+            ctx.lineTo(150, 50);
+            ctx.stroke();
+
+            // Draw hangman parts based on incorrect guesses
+            for (let i = 0; i < incorrectGuesses; i++) {
+                const part = hangmanParts[i];
+                if (i === 0) {
+                    ctx.beginPath();
+                    ctx.arc(part.x, part.y, part.radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.translate(part.x, part.y);
+                    ctx.rotate(part.angle * Math.PI / 180);
+                    ctx.rect(0, 0, part.width, part.height);
+                    ctx.fill();
+                    ctx.rotate(-part.angle * Math.PI / 180);
+                    ctx.translate(-part.x, -part.y);
+                }
+            }
+        }
+
+        function updateWordDisplay() {
+            let display = '';
+            for (let i = 0; i < wordToGuess.length; i++) {
+                if (guessedLetters.includes(wordToGuess[i])) {
+                    display += wordToGuess[i];
+                } else {
+                    display += '_ ';
+                }
+            }
+            wordDisplay.textContent = display;
+        }
+
+        function checkWin() {
+            if (wordToGuess.split('').every(letter => guessedLetters.includes(letter))) {
+                message.textContent = 'Congratulations! You won!';
+                gameIsOver = true;
+            }
+        }
+
+        function checkLose() {
+            if (incorrectGuesses === hangmanParts.length) {
+                message.textContent = 'Game over! The word was: ' + wordToGuess;
+                gameIsOver = true;
+            }
+        }
+
+        function guessLetter() {
+            if (!gameIsOver) {
+                const guess = guessInput.value.toUpperCase();
+                if (!guessedLetters.includes(guess)) {
+                    guessedLetters.push(guess);
+                    if (!wordToGuess.includes(guess)) {
+                        incorrectGuesses++;
+                        drawHangman();
+                    }
+                    updateWordDisplay();
+                    checkWin();
+                    checkLose();
+                    guessInput.value = '';
+                } else {
+                    message.textContent = 'You already guessed that letter.';
+                }
+            }
+        }
+
+        function startGame() {
+            // Replace 'secret_word' with your desired word
+            wordToGuess = 'SECRET_WORD'.toUpperCase();
+            guessedLetters = [];
+            incorrectGuesses = 0;
+            gameIsOver = false;
+            drawHangman();
+            updateWordDisplay();
+            message.textContent = '';
+        }
+
+        // Start the game
+        startGame();
+    </script>
+</body>
+
+</html>
